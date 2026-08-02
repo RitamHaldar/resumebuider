@@ -1,6 +1,6 @@
 import { Iuser } from "@/types/user.types";
 import mongoose, { Document } from "mongoose";
-import bcryptjs from "bcryptjs"
+import bcrypt from "bcrypt"
 
 interface documentuser extends Omit<Iuser, "_id">, Document {
     comparepass(pass: string): boolean;
@@ -33,11 +33,11 @@ const UserSchema = new mongoose.Schema<documentuser>({
 
 UserSchema.pre("save", function (): void {
     if (!this.isModified("password")) return
-    this.password = bcryptjs.hashSync(this.password, 10)
+    this.password = bcrypt.hashSync(this.password, 10)
 })
 
 UserSchema.methods.comparepass = function (pass: string): boolean {
-    return bcryptjs.compareSync(pass, this.passsword)
+    return bcrypt.compareSync(pass, this.password)
 }
 
 export const userModel = mongoose.models.User || mongoose.model("User", UserSchema);

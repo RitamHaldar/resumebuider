@@ -10,10 +10,15 @@ export interface Iuser {
 export interface RegisterBody {
     name: string;
     email: string;
-    passsword: string;
     mobile: string;
+    password: string;
 }
 export interface LoginBody {
     email: string;
     password: string;
+}
+
+export interface JwtPayload {
+    userId: string;
+    email?: string;
 }
