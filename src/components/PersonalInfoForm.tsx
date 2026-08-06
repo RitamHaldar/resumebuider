@@ -15,7 +15,6 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   ArrowRight,
-  Camera,
 } from "lucide-react";
 import { IPersonalInfo } from "@/types/resume.types";
 import ResumeTopBar from "./ResumeTopBar";
@@ -36,7 +35,6 @@ export interface PersonalInfoFormData extends IPersonalInfo {
   professionalTitle?: string;
   city?: string;
   country?: string;
-  avatarUrl?: string;
 }
 
 interface PersonalInfoFormProps {
@@ -77,41 +75,27 @@ export default function PersonalInfoForm({
     professionalTitle: initialData?.professionalTitle || "",
     city: initialCity,
     country: initialCountry,
-    avatarUrl: initialData?.avatarUrl || "",
   });
-
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    initialData?.avatarUrl || null
-  );
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
-      const updated = { ...prev, [name]: value };
-      if (name === "city" || name === "country") {
-        const cityVal = name === "city" ? value : prev.city || "";
-        const countryVal = name === "country" ? value : prev.country || "";
-        updated.location = [cityVal, countryVal].filter(Boolean).join(", ");
-      }
-      if (onSave) onSave(updated);
-      return updated;
-    });
-  };
+    let cityVal = formData.city || "";
+    let countryVal = formData.country || "";
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size exceeds 5MB limit");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setAvatarPreview(result);
-        setFormData((prev) => ({ ...prev, avatarUrl: result }));
-      };
-      reader.readAsDataURL(file);
+    if (name === "city") cityVal = value;
+    if (name === "country") countryVal = value;
+
+    const locationStr = [cityVal, countryVal].filter(Boolean).join(", ");
+
+    const updated: PersonalInfoFormData = {
+      ...formData,
+      [name]: value,
+      ...(name === "city" || name === "country" ? { location: locationStr } : {}),
+    };
+
+    setFormData(updated);
+    if (onSave) {
+      onSave(updated);
     }
   };
 
@@ -144,35 +128,6 @@ export default function PersonalInfoForm({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="relative border-2 border-dashed border-indigo-200/80 bg-indigo-50/30 hover:bg-indigo-50/60 rounded-2xl p-5 flex items-center gap-4 cursor-pointer transition group">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center text-indigo-600 border border-slate-200/60 shadow-xs group-hover:scale-105 transition-transform">
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="Profile preview"
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <Camera className="w-6 h-6" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800">
-                    Upload Profile Photo
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Drag and drop or click to browse (Max 5MB)
-                  </p>
-                </div>
-              </label>
-            </div>
 
             <div>
               <label htmlFor="fullname" className="block text-xs font-semibold text-slate-700 mb-1.5">

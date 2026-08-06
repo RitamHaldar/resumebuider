@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ResumeTopBar from "./ResumeTopBar";
 import { IWorkExperience } from "@/types/resume.types";
+import { generateExperienceDescription } from "@/apis/ai.api";
 
 export interface WorkExperienceFormData {
   workExperience: IWorkExperience[];
@@ -132,15 +133,20 @@ export default function WorkExperienceForm({
           handleExpChange(index, "description", res);
         }
       } else {
-        setTimeout(() => {
-          const title = exp.position || "Full Stack Developer";
-          const comp = exp.company || "Technology Company";
-          const generatedMarkdown = `• Spearheaded core software architecture at **${comp}** as a **${title}**, driving cross-functional project execution.\n• Optimized web app performance resulting in a 35% boost in user retention and conversion metrics.\n• Implemented automated testing and robust API integration reducing bug reports by 50%.`;
-          handleExpChange(index, "description", generatedMarkdown);
-          setIsGenerating(false);
-        }, 1200);
-        return;
+        const apiRes = await generateExperienceDescription({
+          jobRole: exp.position || "Developer",
+          yearsOfExperience: 3,
+          experienceLevel: "Mid-Level",
+        });
+        const desc =
+          apiRes?.body?.workExperienceDescription ||
+          apiRes?.body?.description ||
+          (typeof apiRes?.body === "string" ? apiRes.body : apiRes?.workExperienceDescription || apiRes?.description) ||
+          `• Spearheaded engineering developments at ${exp.company || "company"} as ${exp.position || "developer"}.\n• Enhanced performance and team efficiency.`;
+        handleExpChange(index, "description", desc);
       }
+    } catch (err) {
+      console.error("AI Experience description generation failed:", err);
     } finally {
       setIsGenerating(false);
     }

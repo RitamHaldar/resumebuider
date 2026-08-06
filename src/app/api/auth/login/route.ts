@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
             success: true, message: "User Logged In successfully"
         })
 
-        response.cookies.set("token", cookie)
+        response.cookies.set("token", cookie, {
+            httpOnly: true,
+            sameSite: "lax",
+            maxAge: 60 * 60 * 1000
+        });
 
         return response
     }

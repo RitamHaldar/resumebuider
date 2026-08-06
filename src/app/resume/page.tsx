@@ -1,6 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createResume } from "@/apis/resume.api";
+import { getUser } from "@/apis/auth.api";
+import { Loader2 } from "lucide-react";
 import PersonalInfoForm from "@/components/PersonalInfoForm";
 import SummaryForm from "@/components/SummaryForm";
 import SkillsForm from "@/components/SkillsForm";
@@ -10,7 +14,44 @@ import EducationForm from "@/components/EducationForm";
 import CertificationsForm from "@/components/CertificationsForm";
 
 export default function ResumePage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [initLoading, setInitLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const initNewResume = async () => {
+      try {
+        const userRes = await getUser();
+        if (!userRes || !userRes.success || !userRes.body?.userId) {
+          router.replace("/auth/login");
+          return;
+        }
+        const res = await createResume({});
+        if (res && res.success && res.body) {
+          const id = res.body._id || res.body.id;
+          if (id) {
+            router.replace(`/resume/${id}`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.log("Could not auto-create resume:", err);
+        router.replace("/auth/login");
+      } finally {
+        setInitLoading(false);
+      }
+    };
+    initNewResume();
+  }, [router]);
+
+  if (initLoading) {
+    return (
+      <div className="min-h-screen bg-[#fcf8ff] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <p className="text-xs text-slate-500 font-medium">Initializing your new resume...</p>
+      </div>
+    );
+  }
 
   const handleStepClick = (step: number) => {
     setCurrentStep(step);

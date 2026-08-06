@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
         const result = await model.invoke(prompt);
 
-        let projectDescription = result.text;
+        let projectDescription = typeof result.content === "string" ? result.content : (result.text || String(result.content));
 
 
         return NextResponse.json<Iresponse>({

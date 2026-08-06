@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ResumeTopBar from "./ResumeTopBar";
+import { generateSkills } from "@/apis/ai.api";
 
 const POPULAR_SKILLS = [
   "React",
@@ -139,25 +140,19 @@ export default function SkillsForm({
           setSkills(merged);
         }
       } else {
-        setTimeout(() => {
-          const aiSuggested = [
-            "Next.js",
-            "TypeScript",
-            "Node.js",
-            "Express.js",
-            "MongoDB",
-            "Docker",
-            "Git & GitHub",
-            "RESTful APIs",
-            "Problem Solving",
-            "Agile / Scrum",
-          ];
-          const merged = Array.from(new Set([...skills, ...aiSuggested]));
-          setSkills(merged);
-          setIsGenerating(false);
-        }, 1200);
-        return;
+        const apiRes = await generateSkills({
+          experienceLevel: "Mid-Level",
+          jobTitle: "Software Engineer",
+        });
+        const suggested: string[] =
+          apiRes?.body?.skills ||
+          (Array.isArray(apiRes?.body) ? apiRes.body : apiRes?.skills) ||
+          ["React", "TypeScript", "Node.js", "Docker", "Git"];
+        const merged = Array.from(new Set([...skills, ...suggested]));
+        setSkills(merged);
       }
+    } catch (err) {
+      console.error("AI Skills generation failed:", err);
     } finally {
       setIsGenerating(false);
     }

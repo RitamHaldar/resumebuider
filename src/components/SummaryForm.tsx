@@ -12,6 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ResumeTopBar from "./ResumeTopBar";
+import { generateSummary } from "@/apis/ai.api";
 
 interface SummaryFormProps {
   initialSummary?: string;
@@ -107,16 +108,19 @@ export default function SummaryForm({
           setFormData((prev) => ({ ...prev, summary: result }));
         }
       } else {
-        setTimeout(() => {
-          const role = formData.targetRole || "Software Engineer";
-          const level = formData.experienceLevel || "Mid-Level";
-          const ind = formData.industry || "Technology";
-          const generatedDemo = `Results-driven ${role} with proven experience in ${ind}. Track record of scaling solutions and driving cross-functional project success using modern methodologies. Adept at bridging technical implementation with strategic objectives to achieve high-impact business outcomes.`;
-          setFormData((prev) => ({ ...prev, summary: generatedDemo }));
-          setIsGenerating(false);
-        }, 1200);
-        return;
+        const res = await generateSummary({
+          experienceLevel: formData.experienceLevel || "Mid-Level",
+          skills: [],
+          jobTitle: formData.targetRole || "Software Engineer",
+        });
+        const summaryText =
+          res?.body?.summary ||
+          (typeof res?.body === "string" ? res.body : res?.summary) ||
+          `Results-driven ${formData.targetRole || "professional"} with expertise in driving technical and product outcomes.`;
+        setFormData((prev) => ({ ...prev, summary: summaryText }));
       }
+    } catch (err) {
+      console.error("AI Summary generation failed:", err);
     } finally {
       setIsGenerating(false);
     }

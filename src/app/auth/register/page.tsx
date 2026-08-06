@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { register } from "@/apis/auth.api";
 import {
   Eye,
   EyeOff,
@@ -10,6 +11,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Phone,
 } from "lucide-react";
 
 export default function RegisterPage() {
@@ -18,6 +20,7 @@ export default function RegisterPage() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -137,8 +140,13 @@ export default function RegisterPage() {
     setError(null);
     setSuccess(null);
 
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !mobile || !password || !confirmPassword) {
       setError("Please fill in all required fields.");
+      return;
+    }
+
+    if (mobile.length !== 10) {
+      setError("Mobile number must be exactly 10 digits.");
       return;
     }
 
@@ -150,19 +158,13 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fullName, email, password }),
-      });
+      const data = await register({ name: fullName, email, mobile, password });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.message || "Registration failed. Please try again.");
       }
 
-      setSuccess("Account created successfully! Redirecting to login...");
+      setSuccess(data.message || "Account created successfully! Redirecting to login...");
       setTimeout(() => {
         router.push("/auth/login");
       }, 1500);
@@ -390,6 +392,25 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
+                  className="w-full h-[40px] xl:h-[44px] px-3.5 rounded-[14px] bg-white border border-[#c7c4d7] text-[#1b1b23] placeholder-[#464554]/50 text-xs xl:text-sm focus:outline-none focus:border-[#4648d4] focus:ring-4 focus:ring-[#6063ee]/10 transition-all duration-200"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="mobile"
+                  className="block text-xs font-medium text-[#1b1b23]"
+                >
+                  Mobile Number (10 digits)
+                </label>
+                <input
+                  id="mobile"
+                  type="tel"
+                  required
+                  maxLength={10}
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                  placeholder="9876543210"
                   className="w-full h-[40px] xl:h-[44px] px-3.5 rounded-[14px] bg-white border border-[#c7c4d7] text-[#1b1b23] placeholder-[#464554]/50 text-xs xl:text-sm focus:outline-none focus:border-[#4648d4] focus:ring-4 focus:ring-[#6063ee]/10 transition-all duration-200"
                 />
               </div>

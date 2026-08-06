@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import ResumeTopBar from "./ResumeTopBar";
 import { IProjects } from "@/types/resume.types";
+import { generateProjectDescription } from "@/apis/ai.api";
 
 export interface ProjectsFormData {
   projects: IProjects[];
@@ -160,15 +161,20 @@ export default function ProjectsForm({
           handleProjectChange(index, "description", res);
         }
       } else {
-        setTimeout(() => {
-          const title = proj.title || "Web Application";
-          const techStr = (proj.techStack || []).join(", ") || "React, Node.js";
-          const generatedMarkdown = `• Architected and developed **${title}** leveraging ${techStr} to deliver a high-performance user experience.\n• Implemented secure REST APIs and optimized database queries, reducing data retrieval latency by 45%.\n• Integrated responsive UI components and automated deployment pipelines for continuous delivery.`;
-          handleProjectChange(index, "description", generatedMarkdown);
-          setIsGenerating(false);
-        }, 1200);
-        return;
+        const apiRes = await generateProjectDescription({
+          jobTitle: proj.title || "Software Project",
+          techStack: proj.techStack || [],
+          experienceLevel: "Mid-Level",
+        });
+        const desc =
+          apiRes?.body?.projectDescription ||
+          apiRes?.body?.description ||
+          (typeof apiRes?.body === "string" ? apiRes.body : apiRes?.projectDescription || apiRes?.description) ||
+          `• Architected and developed **${proj.title || "Project"}** using ${(proj.techStack || []).join(", ") || "modern tech stack"}.\n• Delivered end-to-end functionality with high quality standards.`;
+        handleProjectChange(index, "description", desc);
       }
+    } catch (err) {
+      console.error("AI Project description generation failed:", err);
     } finally {
       setIsGenerating(false);
     }

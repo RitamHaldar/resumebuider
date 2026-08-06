@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { login } from "@/apis/auth.api";
 import {
   Mail,
   Lock,
@@ -147,19 +148,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await login({ email, password });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.message || "Invalid credentials. Please try again.");
       }
 
-      setSuccess("Welcome back! Redirecting to your dashboard...");
+      setSuccess(data.message || "Welcome back! Redirecting to your dashboard...");
       setTimeout(() => {
         router.push("/");
       }, 1500);

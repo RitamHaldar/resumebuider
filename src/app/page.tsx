@@ -1,7 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getallResume, createResume, deleteResume } from "@/apis/resume.api";
+import { getUser } from "@/apis/auth.api";
+import { IResume } from "@/types/resume.types";
 import {
   FileText,
   Sparkles,
@@ -13,9 +17,88 @@ import {
   Star,
   Award,
   Zap,
+  Plus,
+  Trash2,
+  Edit3,
+  Loader2,
+  Clock,
+  LogIn,
 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [loadingResumes, setLoadingResumes] = useState<boolean>(true);
+  const [creating, setCreating] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const fetchUserAndResumes = async () => {
+    try {
+      setCheckingAuth(true);
+      const userRes = await getUser();
+      if (userRes && userRes.success && userRes.body?.userId) {
+        setUserId(userRes.body.userId);
+        setLoadingResumes(true);
+        const res = await getallResume();
+        if (res && res.success && Array.isArray(res.body)) {
+          setResumes(res.body);
+        }
+      } else {
+        setUserId(null);
+      }
+    } catch (err) {
+      console.log("User not logged in or error:", err);
+      setUserId(null);
+    } finally {
+      setCheckingAuth(false);
+      setLoadingResumes(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserAndResumes();
+  }, []);
+
+  const handleCreateResume = async () => {
+    if (!userId) {
+      router.push("/auth/login");
+      return;
+    }
+    try {
+      setCreating(true);
+      const res = await createResume({});
+      if (res && res.success && res.body) {
+        const resumeId = res.body._id || res.body.id;
+        if (resumeId) {
+          router.push(`/resume/${resumeId}`);
+          return;
+        }
+      }
+      router.push("/resume");
+    } catch (err) {
+      console.log("Error creating resume:", err);
+      router.push("/resume");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteResume = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this resume?")) return;
+    try {
+      setDeletingId(id);
+      await deleteResume(id);
+      await fetchUserAndResumes();
+    } catch (err) {
+      console.log("Error deleting resume:", err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fcf8ff] text-slate-800 font-sans relative overflow-hidden">
       <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[#e1e0ff] rounded-full blur-3xl pointer-events-none opacity-60" />
@@ -33,36 +116,52 @@ export default function Home() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+            {userId && (
+              <a href="#dashboard" className="hover:text-indigo-600 transition">
+                My Resumes
+              </a>
+            )}
             <a href="#features" className="hover:text-indigo-600 transition">
               Features
             </a>
             <a href="#how-it-works" className="hover:text-indigo-600 transition">
               How It Works
             </a>
-            <a href="#testimonials" className="hover:text-indigo-600 transition">
-              Reviews
-            </a>
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="hidden sm:inline-block text-xs font-semibold text-slate-600 hover:text-slate-900 transition px-3 py-2"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/resume"
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <span>Create Resume</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {userId ? (
+              <button
+                onClick={handleCreateResume}
+                disabled={creating}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Resume</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>Sign In / Login</span>
+                <LogIn className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
-      <section className="pt-36 sm:pt-44 pb-20 px-6 sm:px-12 max-w-7xl mx-auto relative z-10">
+      <section className="pt-36 sm:pt-44 pb-12 px-6 sm:px-12 max-w-7xl mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
@@ -77,37 +176,184 @@ export default function Home() {
           </h1>
 
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-            Build professional, recruiter-tested resumes in minutes. Powered by real-time AI bullet point generation and instant Overleaf live previews.
+            Build professional, recruiter-tested resumes in minutes. Powered by real-time AI bullet point generation and instant live previews.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
-              href="/resume"
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <span>Create My Resume Now</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {userId ? (
+              <button
+                onClick={handleCreateResume}
+                disabled={creating}
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating Resume...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create My Resume Now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>Sign In to Create Resume</span>
+                <LogIn className="w-4 h-4" />
+              </Link>
+            )}
             <a
-              href="#features"
+              href={userId ? "#dashboard" : "/auth/login"}
               className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm px-7 py-4 rounded-2xl border border-[#e4e1ed] shadow-2xs transition"
             >
-              Explore Features
+              {userId ? "View My Resumes" : "Explore Account"}
             </a>
           </div>
+        </div>
+
+        {/* Dashboard Section showing User Resumes */}
+        <div id="dashboard" className="mt-16 max-w-5xl mx-auto">
+          {checkingAuth ? (
+            <div className="bg-white rounded-2xl p-8 text-center border border-[#e4e1ed] shadow-sm flex flex-col items-center justify-center gap-2">
+              <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+              <p className="text-xs text-slate-500 font-medium">Checking authentication status...</p>
+            </div>
+          ) : !userId ? (
+            <div className="bg-white rounded-2xl p-10 text-center border border-dashed border-indigo-200 shadow-sm flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <LogIn className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base">Sign In Required</h3>
+              <p className="text-xs text-slate-500 max-w-sm">Please log in to your account to build, edit, and access your saved ATS resumes.</p>
+              <Link
+                href="/auth/login"
+                className="mt-2 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-6 py-3 rounded-xl shadow-md transition cursor-pointer"
+              >
+                <span>Go to Login Page</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">My Saved Resumes</h2>
+                  <p className="text-xs text-slate-500 mt-1">Manage, edit, or create new AI-tailored resumes.</p>
+                </div>
+                <button
+                  onClick={handleCreateResume}
+                  disabled={creating}
+                  className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs px-4 py-2.5 rounded-xl border border-indigo-200 transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Resume
+                </button>
+              </div>
+
+              {loadingResumes ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-[#e4e1ed] shadow-sm flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                  <p className="text-xs text-slate-500 font-medium">Fetching your resumes from database...</p>
+                </div>
+              ) : resumes.length === 0 ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-300 shadow-sm flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-sm">No resumes created yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm">Create your first professional resume powered by AI content generation.</p>
+                  <button
+                    onClick={handleCreateResume}
+                    disabled={creating}
+                    className="mt-2 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-md transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Resume Now</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                  {resumes.map((resItem) => {
+                    const id = resItem._id || resItem.id;
+                    const title = resItem.title || resItem.personalInfo?.fullname || "Untitled Resume";
+                    const date = resItem.updatedAt ? new Date(resItem.updatedAt).toLocaleDateString() : "Recently";
+                    return (
+                      <div
+                        key={id}
+                        onClick={() => router.push(`/resume/${id}`)}
+                        className="bg-white rounded-2xl border border-[#e4e1ed] p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <button
+                              onClick={(e) => handleDeleteResume(e, id)}
+                              disabled={deletingId === id}
+                              title="Delete Resume"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            >
+                              {deletingId === id ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                          <h3 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition truncate">
+                            {title}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                            {resItem.summary || resItem.personalInfo?.email || "Click to edit resume sections"}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {date}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <Link
+                              href={`/resume/${id}/preview`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-1 text-slate-600 hover:text-indigo-600 font-medium transition"
+                            >
+                              <FileText className="w-3.5 h-3.5" /> Preview
+                            </Link>
+                            <span className="flex items-center gap-1 text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+                              <Edit3 className="w-3.5 h-3.5" /> Edit
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+
 
           <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Free AI Bullet Assistant
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Overleaf Live Preview
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Live Preview
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 100% ATS Compliant
             </span>
           </div>
-        </div>
 
         <div className="mt-16 relative max-w-5xl mx-auto">
           <div className="bg-white border border-[#e4e1ed] rounded-3xl p-4 sm:p-6 shadow-xl overflow-hidden relative">

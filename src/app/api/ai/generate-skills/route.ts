@@ -72,23 +72,36 @@ export async function POST(req: NextRequest) {
 
         const result = await model.invoke(prompt);
 
-        let skills = result.content;
+        let skillsText = typeof result.content === "string" ? result.content : (result.text || String(result.content));
 
-        if (typeof skills === "string") {
-            try {
-                skills = JSON.parse(skills);
-            } catch (err) {
-                console.error("Failed to parse skills:", err);
+        // Clean markdown code blocks if present
+        skillsText = skillsText.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+
+        let skills: string[] = [];
+        try {
+            const parsed = JSON.parse(skillsText);
+            if (Array.isArray(parsed)) {
+                skills = parsed;
+            } else if (parsed && Array.isArray(parsed.skills)) {
+                skills = parsed.skills;
             }
+        } catch (err) {
+            console.error("Failed to parse skills JSON, extracting items line-by-line:", err);
+            skills = skillsText
+                .split("\n")
+                .map((s) => s.replace(/^[-*•\d.\s"'\\[\\]]+/, "").replace(/["',]/g, "").trim())
+                .filter(Boolean);
         }
 
         return NextResponse.json<Iresponse>({
-            success: true, message: "Skills created", body: {
+            success: true,
+            message: "Skills created",
+            body: {
                 skills
             }
         }, {
             status: 201
-        })
+        });
 
     } catch (error) {
         console.log("error in Skills generation api", error);

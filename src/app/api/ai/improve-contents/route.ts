@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
         const result = await model.invoke(prompt);
 
-        const AtsScore = result.text;
+        const AtsScore = typeof result.content === "string" ? result.content : (result.text || String(result.content));
 
         return NextResponse.json<Iresponse>(
             {
