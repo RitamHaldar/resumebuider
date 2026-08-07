@@ -33,8 +33,10 @@ export async function POST(req: NextRequest) {
 
         response.cookies.set("token", cookie, {
             httpOnly: true,
-            sameSite: "lax",
-            maxAge: 60 * 60 * 1000
+            sameSite: "none",
+            secure: true,
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
         });
 
         return response

@@ -164,10 +164,10 @@ export default function RegisterPage() {
         throw new Error(data.message || "Registration failed. Please try again.");
       }
 
-      setSuccess(data.message || "Account created successfully! Redirecting to login...");
+      setSuccess(data.message || "Account created successfully! Redirecting to home page...");
       setTimeout(() => {
-        router.push("/auth/login");
-      }, 1500);
+        router.push("/");
+      }, 1000);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
