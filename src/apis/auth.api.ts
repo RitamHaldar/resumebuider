@@ -1,8 +1,10 @@
 import axios from "axios";
-const API=axios.create({
-    baseURL:"/api/auth",
-    withCredentials:true
-})
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://resumebuider-dun.vercel.app";
+
+const API = axios.create({
+    baseURL: `${BASE_URL}/api/auth`,
+    withCredentials: true
+});
 export async function login(payload:{email:string,password:string}){
     try{
         const response=await API.post("/login",payload);

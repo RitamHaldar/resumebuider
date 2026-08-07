@@ -18,8 +18,10 @@ export async function downloadResumeAsPDF(
   const defaultFilename = `${fullName.replace(/\s+/g, "_")}_Resume.pdf`;
   const filename = options.filename || defaultFilename;
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://resumebuider-dun.vercel.app";
+
   try {
-    const response = await fetch("/api/resume/pdf", {
+    const response = await fetch(`${BASE_URL}/api/resume/pdf`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

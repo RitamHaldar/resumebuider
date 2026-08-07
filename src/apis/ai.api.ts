@@ -1,9 +1,11 @@
 import axios from "axios";
 
-const API=axios.create({
-    baseURL:"/api/ai",
-    withCredentials:true
-})
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://resumebuider-dun.vercel.app";
+
+const API = axios.create({
+    baseURL: `${BASE_URL}/api/ai`,
+    withCredentials: true
+});
 export async function atsScore(payload:{resumetext:string}) {
     try {
         const response=await API.post("/ats-score",payload);

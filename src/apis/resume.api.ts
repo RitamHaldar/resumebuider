@@ -1,8 +1,10 @@
 import axios from "axios";
 import { IResume } from "@/types/resume.types";
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://resumebuider-dun.vercel.app";
+
 const API = axios.create({
-    baseURL: "/api/resume",
+    baseURL: `${BASE_URL}/api/resume`,
     withCredentials: true
 });
 
