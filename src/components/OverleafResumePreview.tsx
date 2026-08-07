@@ -3,7 +3,6 @@
 import React, { useRef, useState } from "react";
 import {
   Download,
-  Printer,
   Edit3,
   Check,
   ArrowLeft,
@@ -14,6 +13,8 @@ import {
 } from "lucide-react";
 import { IResume } from "@/types/resume.types";
 import ResumeTopBar from "./ResumeTopBar";
+
+import { downloadResumeAsPDF } from "@/utils/resume/pdfUtils";
 
 interface OverleafResumePreviewProps {
   resumeData: Partial<IResume> | any;
@@ -50,30 +51,14 @@ export default function OverleafResumePreview({
   const certifications = resumeData.certifications || [];
 
   const handleDownloadPDF = async () => {
-    if (!resumeRef.current) return;
     setDownloading(true);
     try {
-      // @ts-ignore
-      const html2pdf = (await import("html2pdf.js")).default;
-      const element = resumeRef.current;
-      const opt = {
-        margin: [10, 10, 10, 10] as [number, number, number, number],
-        filename: `${(personal.fullname || "Resume").replace(/\s+/g, "_")}_Overleaf.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      };
-      await html2pdf().set(opt as any).from(element).save();
+      await downloadResumeAsPDF(resumeData, { activeFont });
     } catch (err) {
-      console.error("PDF generation failed, falling back to print dialog:", err);
-      window.print();
+      console.error("PDF generation failed:", err);
     } finally {
       setDownloading(false);
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const handleShare = () => {
@@ -92,7 +77,42 @@ export default function OverleafResumePreview({
       : "font-mono text-slate-900";
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans relative pt-16 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans relative pt-12 selection:bg-indigo-100 selection:text-indigo-900">
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0mm !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          #overleaf-resume-document {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm 18mm !important;
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+          }
+          .resume-section-item {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+        }
+      `}</style>
+
       {/* Top Bar for Resume Builder */}
       <div className="print:hidden">
         <ResumeTopBar
@@ -105,7 +125,7 @@ export default function OverleafResumePreview({
       </div>
 
       {/* Main Preview Container */}
-      <div className="max-w-6xl w-full mx-auto px-4 py-8 flex-1 flex flex-col lg:flex-row gap-8 items-start">
+      <div className="max-w-6xl w-full mx-auto px-4 py-4 flex-1 flex flex-col lg:flex-row gap-6 items-start">
         {/* Left Side: Customization & Action Panel */}
         <div className="w-full lg:w-80 bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6 print:hidden">
           <div>
@@ -138,15 +158,6 @@ export default function OverleafResumePreview({
                   Download PDF
                 </>
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-semibold text-sm shadow-xs flex items-center justify-center gap-2 transition cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              Print / Save PDF
             </button>
 
             <button
@@ -280,7 +291,7 @@ export default function OverleafResumePreview({
           <div
             ref={resumeRef}
             id="overleaf-resume-document"
-            className={`w-[210mm] min-h-[297mm] bg-white text-slate-900 p-[15mm] sm:p-[20mm] shadow-xl border border-slate-200 rounded-xs transition-all duration-200 print:shadow-none print:border-none print:w-full print:p-0 ${fontClass}`}
+            className={`w-[210mm] min-h-[297mm] bg-white text-slate-900 p-[8mm_16mm_14mm_16mm] sm:p-[8mm_16mm_14mm_16mm] shadow-xl border border-slate-200 rounded-xs transition-all duration-200 ${fontClass}`}
             style={{
               fontFamily:
                 activeFont === "serif"
@@ -291,18 +302,18 @@ export default function OverleafResumePreview({
             }}
           >
             {/* Header Section */}
-            <div className="text-center mb-5 pb-3 border-b-2 border-slate-900">
-              <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider text-slate-950 mb-1">
+            <div className="text-center mb-4 pb-2.5 border-b-2 border-slate-950">
+              <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-wider text-slate-950 mb-1">
                 {personal.fullname || "JOHN DOE"}
               </h1>
               {personal.professionalTitle && (
-                <p className="text-xs sm:text-sm italic font-medium text-slate-700 mb-2">
+                <p className="text-sm sm:text-base italic font-medium text-slate-700 mb-1.5">
                   {personal.professionalTitle}
                 </p>
               )}
 
               {/* Contact Information Row */}
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-slate-800">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-800">
                 {personal.mobile && (
                   <span>{personal.mobile}</span>
                 )}
@@ -364,11 +375,11 @@ export default function OverleafResumePreview({
 
             {/* Professional Summary Section */}
             {summary && (
-              <div className="mb-4">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-1.5">
+              <div className="mb-5">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-2.5">
                   SUMMARY
                 </h2>
-                <p className="text-[11px] leading-relaxed text-slate-800 text-justify">
+                <p className="text-xs sm:text-[13px] leading-relaxed text-slate-800 text-justify">
                   {summary}
                 </p>
               </div>
@@ -376,11 +387,11 @@ export default function OverleafResumePreview({
 
             {/* Technical Skills Section */}
             {skills.length > 0 && (
-              <div className="mb-4">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-1.5">
+              <div className="mb-5">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-2.5">
                   TECHNICAL SKILLS
                 </h2>
-                <div className="text-[11px] leading-snug text-slate-800">
+                <div className="text-xs sm:text-[13px] leading-relaxed text-slate-800">
                   <span className="font-bold text-slate-950">Skills & Technologies: </span>
                   {skills.join(", ")}
                 </div>
@@ -389,31 +400,31 @@ export default function OverleafResumePreview({
 
             {/* Work Experience Section */}
             {workExperience.length > 0 && (
-              <div className="mb-4">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-2">
+              <div className="mb-5">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-3">
                   WORK EXPERIENCE
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {workExperience.map((exp: any, idx: number) => (
-                    <div key={idx} className="space-y-0.5">
-                      <div className="flex justify-between items-baseline text-[11.5px]">
+                    <div key={idx} className="resume-section-item space-y-1">
+                      <div className="flex justify-between items-baseline text-xs sm:text-sm">
                         <span className="font-bold text-slate-950">
                           {exp.position || "Position Title"}
                         </span>
-                        <span className="text-[10.5px] italic text-slate-700 font-medium">
+                        <span className="text-xs italic text-slate-700 font-medium">
                           {[exp.startDate, exp.endDate || (exp.isCurrent ? "Present" : "")]
                             .filter(Boolean)
                             .join(" – ")}
                         </span>
                       </div>
-                      <div className="flex justify-between items-baseline text-[11px] italic text-slate-800 mb-1">
+                      <div className="flex justify-between items-baseline text-xs italic text-slate-800 mb-1.5">
                         <span>{exp.company || "Company Name"}</span>
                         {exp.location && <span>{exp.location}</span>}
                       </div>
                       {exp.description && (
-                        <div className="text-[11px] leading-relaxed text-slate-800 pl-3">
+                        <div className="text-xs sm:text-[12.5px] leading-relaxed text-slate-800 pl-4">
                           {exp.description.includes("\n") ? (
-                            <ul className="list-disc space-y-0.5">
+                            <ul className="list-disc space-y-1">
                               {exp.description
                                 .split("\n")
                                 .map((line: string) => line.replace(/^[-*•\s]+/, "").trim())
@@ -435,23 +446,23 @@ export default function OverleafResumePreview({
 
             {/* Projects Section */}
             {projects.length > 0 && (
-              <div className="mb-4">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-2">
+              <div className="mb-5">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-3">
                   PROJECTS
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {projects.map((proj: any, idx: number) => (
-                    <div key={idx} className="space-y-0.5">
-                      <div className="flex justify-between items-baseline text-[11.5px]">
+                    <div key={idx} className="resume-section-item space-y-1">
+                      <div className="flex justify-between items-baseline text-xs sm:text-sm">
                         <span className="font-bold text-slate-950">
                           {proj.title || "Project Name"}
                           {proj.techStack && proj.techStack.length > 0 && (
-                            <span className="font-normal italic text-[10.5px] text-slate-700 ml-1.5">
+                            <span className="font-normal italic text-xs text-slate-700 ml-2">
                               | {proj.techStack.join(", ")}
                             </span>
                           )}
                         </span>
-                        <div className="text-[10.5px] text-slate-700 flex gap-2">
+                        <div className="text-xs text-slate-700 flex gap-2.5">
                           {proj.liveUrl && (
                             <a
                               href={
@@ -483,9 +494,9 @@ export default function OverleafResumePreview({
                         </div>
                       </div>
                       {proj.description && (
-                        <div className="text-[11px] leading-relaxed text-slate-800 pl-3">
+                        <div className="text-xs sm:text-[12.5px] leading-relaxed text-slate-800 pl-4">
                           {proj.description.includes("\n") ? (
-                            <ul className="list-disc space-y-0.5">
+                            <ul className="list-disc space-y-1">
                               {proj.description
                                 .split("\n")
                                 .map((line: string) => line.replace(/^[-*•\s]+/, "").trim())
@@ -507,24 +518,24 @@ export default function OverleafResumePreview({
 
             {/* Education Section */}
             {education.length > 0 && (
-              <div className="mb-4">
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-2">
+              <div className="mb-5">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-3">
                   EDUCATION
                 </h2>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {education.map((edu: any, idx: number) => (
-                    <div key={idx} className="space-y-0.5">
-                      <div className="flex justify-between items-baseline text-[11.5px]">
+                    <div key={idx} className="resume-section-item space-y-1">
+                      <div className="flex justify-between items-baseline text-xs sm:text-sm">
                         <span className="font-bold text-slate-950">
                           {edu.institution || edu.institute || "University Name"}
                         </span>
-                        <span className="text-[10.5px] italic text-slate-700 font-medium">
+                        <span className="text-xs italic text-slate-700 font-medium">
                           {[edu.startDate, edu.endDate || (edu.isCurrent ? "Present" : "")]
                             .filter(Boolean)
                             .join(" – ")}
                         </span>
                       </div>
-                      <div className="flex justify-between items-baseline text-[11px] italic text-slate-800">
+                      <div className="flex justify-between items-baseline text-xs italic text-slate-800">
                         <span>
                           {[edu.degree, edu.fieldOfStudy].filter(Boolean).join(" in ")}
                         </span>
@@ -539,22 +550,22 @@ export default function OverleafResumePreview({
             {/* Certifications Section */}
             {certifications.length > 0 && (
               <div>
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-950 border-b border-slate-900 pb-0.5 mb-2">
+                <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-950 border-b-2 border-slate-950 pb-1 mb-3">
                   CERTIFICATIONS
                 </h2>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {certifications.map((cert: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-baseline text-[11px]">
+                    <div key={idx} className="resume-section-item flex justify-between items-baseline text-xs sm:text-[13px]">
                       <span className="font-bold text-slate-950">
                         {typeof cert === "string" ? cert : cert.title || "Certification Name"}
                         {typeof cert !== "string" && cert.issuer && (
-                          <span className="font-normal italic text-slate-700 ml-1">
+                          <span className="font-normal italic text-slate-700 ml-1.5">
                             – {cert.issuer}
                           </span>
                         )}
                       </span>
                       {typeof cert !== "string" && cert.issueDate && (
-                        <span className="text-[10.5px] italic text-slate-700">
+                        <span className="text-xs italic text-slate-700">
                           {cert.issueDate}
                         </span>
                       )}

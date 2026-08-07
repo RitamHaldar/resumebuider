@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   GraduationCap,
   Building2,
@@ -32,15 +30,15 @@ interface EducationFormProps {
   onStepClick?: (step: number) => void;
 }
 
-const DEFAULT_EDUCATION: IEducation = {
-  institute: "Stanford University",
-  degree: "B.S. in Computer Science",
-  startDate: "Sep 2018",
-  endDate: "Jun 2022",
+const EMPTY_EDUCATION: IEducation = {
+  institute: "",
+  degree: "",
+  startDate: "",
+  endDate: "",
 };
 
 export default function EducationForm({
-  initialEducation = [DEFAULT_EDUCATION],
+  initialEducation = [],
   currentStep = 6,
   totalSteps = 8,
   completionPercentage = 75,
@@ -50,10 +48,18 @@ export default function EducationForm({
   onStepClick,
 }: EducationFormProps) {
   const [educationList, setEducationList] = useState<IEducation[]>(
-    initialEducation.length > 0 ? initialEducation : [DEFAULT_EDUCATION]
+    initialEducation.length > 0 ? initialEducation : [EMPTY_EDUCATION]
   );
   const [activeEduIndex, setActiveEduIndex] = useState<number>(0);
   const [collapsedEdu, setCollapsedEdu] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    if (initialEducation && initialEducation.length > 0) {
+      setEducationList(initialEducation);
+    } else if (!initialEducation || initialEducation.length === 0) {
+      setEducationList([EMPTY_EDUCATION]);
+    }
+  }, [initialEducation]);
 
   const handleEduChange = (
     index: number,
@@ -93,14 +99,7 @@ export default function EducationForm({
 
   const handleRemoveEducation = (index: number) => {
     if (educationList.length === 1) {
-      setEducationList([
-        {
-          institute: "",
-          degree: "",
-          startDate: "",
-          endDate: "",
-        },
-      ]);
+      setEducationList([EMPTY_EDUCATION]);
       return;
     }
     setEducationList((prev) => prev.filter((_, i) => i !== index));
@@ -120,10 +119,10 @@ export default function EducationForm({
     }
   };
 
-  const activeEdu = educationList[activeEduIndex] || educationList[0] || DEFAULT_EDUCATION;
+  const activeEdu = educationList[activeEduIndex] || educationList[0] || EMPTY_EDUCATION;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-16">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-12">
       <ResumeTopBar
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -132,261 +131,214 @@ export default function EducationForm({
         onStepClick={onStepClick}
       />
 
-      <main className="max-w-6xl w-full mx-auto px-4 py-8 flex-1">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+      <main className="max-w-4xl w-full mx-auto px-4 py-4 flex-1">
+        <div className="mb-4">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Add your educational background
           </h1>
-          <p className="text-slate-500 text-sm sm:text-base mt-2">
-            Detail your degrees, diplomas, or academic institutions attended to showcase your foundation.
+          <p className="text-slate-500 text-xs mt-0.5">
+            Detail your degrees, diplomas, or academic institutions.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            {educationList.map((edu, index) => {
-              const isCollapsed = collapsedEdu[index];
-              const isCurrentlyStudying = edu.endDate?.toLowerCase() === "present";
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-100/80 mb-4 space-y-4">
+          {educationList.map((edu, index) => {
+            const isCollapsed = collapsedEdu[index];
+            const isCurrentlyStudying = edu.endDate?.toLowerCase() === "present";
 
-              return (
-                <div
-                  key={index}
-                  onClick={() => setActiveEduIndex(index)}
-                  className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm border transition-all ${
-                    activeEduIndex === index
-                      ? "border-l-4 border-l-indigo-600 border-slate-200 shadow-md ring-1 ring-indigo-50"
-                      : "border-slate-100/90 hover:border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
-                        {index + 1}
-                      </div>
-                      <h3 className="font-bold text-slate-900 text-lg">
-                        {edu.degree && edu.institute
-                          ? `${edu.degree} - ${edu.institute}`
-                          : edu.degree || edu.institute || `Education ${index + 1}`}
-                      </h3>
+            return (
+              <div
+                key={index}
+                onClick={() => setActiveEduIndex(index)}
+                className={`bg-slate-50/40 rounded-xl p-4 border transition-all ${
+                  activeEduIndex === index
+                    ? "border-l-4 border-l-indigo-600 border-slate-200 shadow-2xs"
+                    : "border-slate-100/90 hover:border-slate-200"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                      {index + 1}
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleCollapse(index);
-                        }}
-                        className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                        title={isCollapsed ? "Expand" : "Collapse"}
-                      >
-                        {isCollapsed ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronUp className="w-4 h-4" />
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveEducation(index);
-                        }}
-                        className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
-                        title="Delete entry"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <h3 className="font-bold text-slate-900 text-sm">
+                      {edu.degree && edu.institute
+                        ? `${edu.degree} - ${edu.institute}`
+                        : edu.degree || edu.institute || `Education ${index + 1}`}
+                    </h3>
                   </div>
 
-                  {!isCollapsed && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            htmlFor={`degree-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
-                          >
-                            Degree / Field of Study <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative flex items-center">
-                            <GraduationCap className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              id={`degree-${index}`}
-                              value={edu.degree}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleEduChange(index, "degree", e.target.value)
-                              }
-                              placeholder="e.g. B.Tech in Computer Science"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
-                              required
-                            />
-                          </div>
-                        </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCollapse(index);
+                      }}
+                      className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition cursor-pointer"
+                      title={isCollapsed ? "Expand" : "Collapse"}
+                    >
+                      {isCollapsed ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronUp className="w-4 h-4" />
+                      )}
+                    </button>
 
-                        <div>
-                          <label
-                            htmlFor={`institute-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
-                          >
-                            School / College / University <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative flex items-center">
-                            <Building2 className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              id={`institute-${index}`}
-                              value={edu.institute}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleEduChange(index, "institute", e.target.value)
-                              }
-                              placeholder="e.g. Stanford University"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
-                              required
-                            />
-                          </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveEducation(index);
+                      }}
+                      className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition cursor-pointer"
+                      title="Delete entry"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {!isCollapsed && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor={`degree-${index}`}
+                          className="block text-xs font-semibold text-slate-700 mb-1"
+                        >
+                          Degree / Field of Study <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative flex items-center">
+                          <GraduationCap className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            id={`degree-${index}`}
+                            value={edu.degree}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleEduChange(index, "degree", e.target.value)
+                            }
+                            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                            required
+                          />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            htmlFor={`edu-startDate-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
-                          >
-                            Start Date
-                          </label>
-                          <div className="relative flex items-center">
-                            <Calendar className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              id={`edu-startDate-${index}`}
-                              value={edu.startDate}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleEduChange(index, "startDate", e.target.value)
-                              }
-                              placeholder="e.g. Sep 2018"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor={`edu-endDate-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
-                          >
-                            Completion Date / End Date
-                          </label>
-                          <div className="relative flex items-center">
-                            <Calendar className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              id={`edu-endDate-${index}`}
-                              value={edu.endDate}
-                              disabled={isCurrentlyStudying}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleEduChange(index, "endDate", e.target.value)
-                              }
-                              placeholder="e.g. Jun 2022"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition disabled:opacity-75 disabled:bg-slate-100"
-                            />
-                          </div>
-                          <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={isCurrentlyStudying}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleCurrentlyStudyingToggle(index, e.target.checked)
-                              }
-                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                            />
-                            <span className="text-xs text-slate-600 font-medium">
-                              I am currently studying here
-                            </span>
-                          </label>
+                      <div>
+                        <label
+                          htmlFor={`institute-${index}`}
+                          className="block text-xs font-semibold text-slate-700 mb-1"
+                        >
+                          School / College / University <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative flex items-center">
+                          <Building2 className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            id={`institute-${index}`}
+                            value={edu.institute}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleEduChange(index, "institute", e.target.value)
+                            }
+                            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                            required
+                          />
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
 
-            <button
-              type="button"
-              onClick={handleAddEducation}
-              className="w-full border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/40 rounded-3xl p-6 flex items-center justify-center gap-2 text-slate-600 hover:text-indigo-600 font-semibold text-sm transition-all cursor-pointer shadow-2xs group"
-            >
-              <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition">
-                <Plus className="w-4 h-4 text-slate-500 group-hover:text-indigo-600 stroke-[3]" />
-              </div>
-              Add Another Education
-            </button>
-          </div>
-
-          <div>
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-md relative overflow-hidden">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-                <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">
-                  OVERLEAF LIVE PREVIEW
-                </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              </div>
-
-              <div className="bg-amber-50/20 border border-amber-100/50 rounded-2xl p-5 font-serif text-slate-900 text-xs leading-relaxed space-y-2">
-                <div className="flex items-center gap-2 text-indigo-700 font-semibold text-xs mb-1">
-                  <Award className="w-4 h-4 text-indigo-600" />
-                  Education Section
-                </div>
-
-                <div className="pt-2 border-t border-slate-200/60 space-y-3">
-                  {educationList.map((edu, i) => (
-                    <div key={i} className="space-y-0.5">
-                      <div className="flex items-baseline justify-between">
-                        <h4 className="font-serif font-bold text-xs text-slate-900">
-                          {edu.degree || "Degree Title"}
-                        </h4>
-                        <span className="font-serif italic text-[11px] text-slate-500">
-                          {edu.startDate || "Start"} - {edu.endDate || "End"}
-                        </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor={`edu-startDate-${index}`}
+                          className="block text-xs font-semibold text-slate-700 mb-1"
+                        >
+                          Start Date
+                        </label>
+                        <div className="relative flex items-center">
+                          <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            id={`edu-startDate-${index}`}
+                            value={edu.startDate}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleEduChange(index, "startDate", e.target.value)
+                            }
+                            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                          />
+                        </div>
                       </div>
-                      <div className="font-serif text-[11px] text-slate-600">
-                        {edu.institute || "University / College"}
+
+                      <div>
+                        <label
+                          htmlFor={`edu-endDate-${index}`}
+                          className="block text-xs font-semibold text-slate-700 mb-1"
+                        >
+                          Completion Date / End Date
+                        </label>
+                        <div className="relative flex items-center">
+                          <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            id={`edu-endDate-${index}`}
+                            value={edu.endDate}
+                            disabled={isCurrentlyStudying}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleEduChange(index, "endDate", e.target.value)
+                            }
+                            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition disabled:opacity-75 disabled:bg-slate-100"
+                          />
+                        </div>
+                        <label className="flex items-center gap-1.5 mt-1 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={isCurrentlyStudying}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              handleCurrentlyStudyingToggle(index, e.target.checked)
+                            }
+                            className="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-slate-600 font-medium">
+                            I am currently studying here
+                          </span>
+                        </label>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={handleAddEducation}
+            className="w-full border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/40 rounded-xl p-2.5 flex items-center justify-center gap-2 text-slate-600 hover:text-indigo-600 font-semibold text-xs transition-all cursor-pointer shadow-2xs group"
+          >
+            <div className="w-5 h-5 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition">
+              <Plus className="w-3 h-3 text-slate-500 group-hover:text-indigo-600 stroke-[3]" />
             </div>
-          </div>
+            Add Another Education
+          </button>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100/60">
+        <div className="flex items-center justify-between pt-2">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 px-4 py-2.5 rounded-xl hover:bg-slate-100/80 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100/80 transition cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Previous
           </button>
-
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <CloudCheck className="w-4 h-4 text-slate-400" />
-            Auto-saved
-          </div>
 
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-sm shadow-indigo-200 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             Next Step
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </main>

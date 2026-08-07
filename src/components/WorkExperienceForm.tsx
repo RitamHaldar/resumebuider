@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Briefcase,
@@ -36,17 +34,16 @@ interface WorkExperienceFormProps {
   onGenerateAIDescription?: (experience: IWorkExperience) => Promise<string> | void;
 }
 
-const DEFAULT_EXPERIENCE: IWorkExperience = {
-  company: "Acme Technologies Inc.",
-  position: "Senior Full Stack Developer",
-  startDate: "Jan 2022",
-  endDate: "Present",
-  description:
-    "• Architected and deployed microservices handling 2M+ monthly active requests with 99.99% uptime.\n• Spearheaded frontend migration to Next.js & React 19, improving page load speeds by 42%.\n• Mentored 5 junior engineers and established automated CI/CD code review workflows.",
+const EMPTY_EXPERIENCE: IWorkExperience = {
+  company: "",
+  position: "",
+  startDate: "",
+  endDate: "",
+  description: "",
 };
 
 export default function WorkExperienceForm({
-  initialWorkExperience = [DEFAULT_EXPERIENCE],
+  initialWorkExperience = [],
   currentStep = 4,
   totalSteps = 8,
   completionPercentage = 50,
@@ -57,11 +54,19 @@ export default function WorkExperienceForm({
   onGenerateAIDescription,
 }: WorkExperienceFormProps) {
   const [experiences, setExperiences] = useState<IWorkExperience[]>(
-    initialWorkExperience.length > 0 ? initialWorkExperience : [DEFAULT_EXPERIENCE]
+    initialWorkExperience.length > 0 ? initialWorkExperience : [EMPTY_EXPERIENCE]
   );
   const [activeExpIndex, setActiveExpIndex] = useState<number>(0);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [collapsedExp, setCollapsedExp] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    if (initialWorkExperience && initialWorkExperience.length > 0) {
+      setExperiences(initialWorkExperience);
+    } else if (!initialWorkExperience || initialWorkExperience.length === 0) {
+      setExperiences([EMPTY_EXPERIENCE]);
+    }
+  }, [initialWorkExperience]);
 
   const handleExpChange = (
     index: number,
@@ -102,15 +107,7 @@ export default function WorkExperienceForm({
 
   const handleRemoveExperience = (index: number) => {
     if (experiences.length === 1) {
-      setExperiences([
-        {
-          company: "",
-          position: "",
-          startDate: "",
-          endDate: "",
-          description: "",
-        },
-      ]);
+      setExperiences([EMPTY_EXPERIENCE]);
       return;
     }
     setExperiences((prev) => prev.filter((_, i) => i !== index));
@@ -125,7 +122,7 @@ export default function WorkExperienceForm({
 
   const handleAIGenerate = async (index: number) => {
     setIsGenerating(true);
-    const exp = experiences[index];
+    const exp = experiences[index] || EMPTY_EXPERIENCE;
     try {
       if (onGenerateAIDescription) {
         const res = await onGenerateAIDescription(exp);
@@ -142,7 +139,7 @@ export default function WorkExperienceForm({
           apiRes?.body?.workExperienceDescription ||
           apiRes?.body?.description ||
           (typeof apiRes?.body === "string" ? apiRes.body : apiRes?.workExperienceDescription || apiRes?.description) ||
-          `• Spearheaded engineering developments at ${exp.company || "company"} as ${exp.position || "developer"}.\n• Enhanced performance and team efficiency.`;
+          "";
         handleExpChange(index, "description", desc);
       }
     } catch (err) {
@@ -159,10 +156,10 @@ export default function WorkExperienceForm({
     }
   };
 
-  const activeExp = experiences[activeExpIndex] || experiences[0] || DEFAULT_EXPERIENCE;
+  const activeExp = experiences[activeExpIndex] || experiences[0] || EMPTY_EXPERIENCE;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-16">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-12">
       <ResumeTopBar
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -171,18 +168,18 @@ export default function WorkExperienceForm({
         onStepClick={onStepClick}
       />
 
-      <main className="max-w-6xl w-full mx-auto px-4 py-8 flex-1">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+      <main className="max-w-5xl w-full mx-auto px-4 py-4 flex-1">
+        <div className="mb-4">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Highlight your work experience
           </h1>
-          <p className="text-slate-500 text-sm sm:text-base mt-2">
-            Detail your employment history, key responsibilities, and major achievements for recruiters.
+          <p className="text-slate-500 text-xs mt-0.5">
+            Detail your employment history, key responsibilities, and achievements.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 items-start">
+          <div className="lg:col-span-2 space-y-4">
             {experiences.map((exp, index) => {
               const isCollapsed = collapsedExp[index];
               const isCurrentlyWorking = exp.endDate?.toLowerCase() === "present";
@@ -191,32 +188,32 @@ export default function WorkExperienceForm({
                 <div
                   key={index}
                   onClick={() => setActiveExpIndex(index)}
-                  className={`bg-white rounded-3xl p-6 sm:p-8 shadow-sm border transition-all ${
+                  className={`bg-white rounded-2xl p-4 sm:p-5 shadow-xs border transition-all ${
                     activeExpIndex === index
-                      ? "border-l-4 border-l-indigo-600 border-slate-200 shadow-md ring-1 ring-indigo-50"
+                      ? "border-l-4 border-l-indigo-600 border-slate-200 shadow-sm ring-1 ring-indigo-50"
                       : "border-slate-100/90 hover:border-slate-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
                         {index + 1}
                       </div>
-                      <h3 className="font-bold text-slate-900 text-lg">
+                      <h3 className="font-bold text-slate-900 text-sm">
                         {exp.position && exp.company
                           ? `${exp.position} at ${exp.company}`
                           : exp.position || exp.company || `Work Experience ${index + 1}`}
                       </h3>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleCollapse(index);
                         }}
-                        className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                        className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition cursor-pointer"
                         title={isCollapsed ? "Expand" : "Collapse"}
                       >
                         {isCollapsed ? (
@@ -232,7 +229,7 @@ export default function WorkExperienceForm({
                           e.stopPropagation();
                           handleRemoveExperience(index);
                         }}
-                        className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                        className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
                         title="Delete experience"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -241,17 +238,17 @@ export default function WorkExperienceForm({
                   </div>
 
                   {!isCollapsed && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label
                             htmlFor={`position-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-semibold text-slate-700 mb-1"
                           >
                             Job Title / Role <span className="text-rose-500">*</span>
                           </label>
                           <div className="relative flex items-center">
-                            <Briefcase className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <Briefcase className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
                               type="text"
                               id={`position-${index}`}
@@ -259,8 +256,7 @@ export default function WorkExperienceForm({
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleExpChange(index, "position", e.target.value)
                               }
-                              placeholder="e.g. Senior Full Stack Developer"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                              className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                               required
                             />
                           </div>
@@ -269,12 +265,12 @@ export default function WorkExperienceForm({
                         <div>
                           <label
                             htmlFor={`company-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-semibold text-slate-700 mb-1"
                           >
                             Company / Organization <span className="text-rose-500">*</span>
                           </label>
                           <div className="relative flex items-center">
-                            <Building2 className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <Building2 className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
                               type="text"
                               id={`company-${index}`}
@@ -282,24 +278,23 @@ export default function WorkExperienceForm({
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleExpChange(index, "company", e.target.value)
                               }
-                              placeholder="e.g. Acme Technologies Inc."
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                              className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                               required
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label
                             htmlFor={`startDate-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-semibold text-slate-700 mb-1"
                           >
                             Start Date
                           </label>
                           <div className="relative flex items-center">
-                            <Calendar className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
                               type="text"
                               id={`startDate-${index}`}
@@ -307,8 +302,7 @@ export default function WorkExperienceForm({
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleExpChange(index, "startDate", e.target.value)
                               }
-                              placeholder="e.g. Jan 2022"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                              className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                             />
                           </div>
                         </div>
@@ -316,12 +310,12 @@ export default function WorkExperienceForm({
                         <div>
                           <label
                             htmlFor={`endDate-${index}`}
-                            className="block text-xs font-semibold text-slate-700 mb-1.5"
+                            className="block text-xs font-semibold text-slate-700 mb-1"
                           >
                             End Date
                           </label>
                           <div className="relative flex items-center">
-                            <Calendar className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
                               type="text"
                               id={`endDate-${index}`}
@@ -330,18 +324,17 @@ export default function WorkExperienceForm({
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleExpChange(index, "endDate", e.target.value)
                               }
-                              placeholder="e.g. Present or Dec 2024"
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition disabled:opacity-75 disabled:bg-slate-100"
+                              className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition disabled:opacity-75 disabled:bg-slate-100"
                             />
                           </div>
-                          <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                          <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
                             <input
                               type="checkbox"
                               checked={isCurrentlyWorking}
                               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 handleCurrentlyWorkingToggle(index, e.target.checked)
                               }
-                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                              className="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                             />
                             <span className="text-xs text-slate-600 font-medium">
                               I currently work in this role
@@ -351,7 +344,7 @@ export default function WorkExperienceForm({
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-1">
                           <label
                             htmlFor={`description-${index}`}
                             className="block text-xs font-semibold text-slate-700"
@@ -365,14 +358,13 @@ export default function WorkExperienceForm({
 
                         <textarea
                           id={`description-${index}`}
-                          rows={5}
+                          rows={3}
                           maxLength={1000}
                           value={exp.description}
                           onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
                             handleExpChange(index, "description", e.target.value)
                           }
-                          placeholder="• Architected and deployed microservices handling 2M+ monthly active requests.&#10;• Improved site loading speed by 40% through code splitting and asset optimization."
-                          className="w-full p-4 bg-slate-50/40 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition resize-y font-mono leading-relaxed"
+                          className="w-full p-3 bg-slate-50/40 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition resize-y font-mono leading-relaxed"
                         />
                       </div>
                     </div>
@@ -384,108 +376,67 @@ export default function WorkExperienceForm({
             <button
               type="button"
               onClick={handleAddExperience}
-              className="w-full border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/40 rounded-3xl p-6 flex items-center justify-center gap-2 text-slate-600 hover:text-indigo-600 font-semibold text-sm transition-all cursor-pointer shadow-2xs group"
+              className="w-full border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/40 rounded-2xl p-3 flex items-center justify-center gap-2 text-slate-600 hover:text-indigo-600 font-semibold text-xs transition-all cursor-pointer shadow-2xs group"
             >
-              <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition">
-                <Plus className="w-4 h-4 text-slate-500 group-hover:text-indigo-600 stroke-[3]" />
+              <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition">
+                <Plus className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-600 stroke-[3]" />
               </div>
               Add Another Experience
             </button>
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-gradient-to-b from-sky-50/70 to-indigo-50/50 border border-sky-100/90 rounded-3xl p-6 shadow-xs">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600">
-                  <Sparkles className="w-4 h-4" />
+          <div className="space-y-4">
+            <div className="bg-gradient-to-b from-sky-50/70 to-indigo-50/50 border border-sky-100/90 rounded-2xl p-4 shadow-2xs">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
+                  <Sparkles className="w-3.5 h-3.5" />
                 </div>
-                <h3 className="font-bold text-slate-900 text-base">AI Work Assistant</h3>
+                <h3 className="font-bold text-slate-900 text-sm">AI Work Assistant</h3>
               </div>
 
-              <p className="text-xs text-slate-500 leading-relaxed mb-6">
-                Let AI generate high-impact bullet points with quantifiable metrics tailored to your role.
+              <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                Let AI generate bullet points tailored to your role.
               </p>
 
               <button
                 type="button"
                 onClick={() => handleAIGenerate(activeExpIndex)}
                 disabled={isGenerating}
-                className="w-full bg-white hover:bg-slate-50/80 border border-indigo-100 text-indigo-600 rounded-xl py-3 px-4 text-xs font-semibold flex items-center justify-center gap-2 shadow-2xs hover:shadow-xs cursor-pointer transition disabled:opacity-60 active:scale-[0.99]"
+                className="w-full bg-white hover:bg-slate-50/80 border border-indigo-100 text-indigo-600 rounded-lg py-2 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs cursor-pointer transition disabled:opacity-60 active:scale-[0.99]"
               >
                 {isGenerating ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-500" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-indigo-500" />
-                    Generate Description with AI
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                    Generate Description
                   </>
                 )}
               </button>
             </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-md relative overflow-hidden">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-                <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">
-                  OVERLEAF LIVE PREVIEW
-                </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              </div>
-
-              <div className="bg-amber-50/20 border border-amber-100/50 rounded-2xl p-5 font-serif text-slate-900 text-xs leading-relaxed space-y-2">
-                <div className="flex items-baseline justify-between">
-                  <h4 className="font-serif font-bold text-sm text-slate-900 tracking-wide">
-                    {activeExp.position || "Job Position"}
-                    {activeExp.company && <span className="font-normal text-slate-600"> — {activeExp.company}</span>}
-                  </h4>
-                </div>
-
-                {(activeExp.startDate || activeExp.endDate) && (
-                  <div className="font-serif italic text-[11px] text-slate-500">
-                    {activeExp.startDate || "Start Date"} – {activeExp.endDate || "End Date"}
-                  </div>
-                )}
-
-                <div className="pt-2 border-t border-slate-200/60 mt-2">
-                  {activeExp.description ? (
-                    <div className="prose prose-xs max-w-none text-slate-800 font-serif text-xs leading-relaxed">
-                      <ReactMarkdown>{activeExp.description}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-slate-400 italic text-[11px]">
-                      Work experience details will render live here...
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100/60">
+        <div className="flex items-center justify-between pt-2">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 px-4 py-2.5 rounded-xl hover:bg-slate-100/80 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100/80 transition cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Previous
           </button>
-
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <CloudCheck className="w-4 h-4 text-slate-400" />
-            Auto-saved
-          </div>
 
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-sm shadow-indigo-200 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             Next Step
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </main>

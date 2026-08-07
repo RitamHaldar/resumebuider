@@ -79,6 +79,11 @@ export default function DynamicResumePage() {
     }
   };
 
+  const handleStepClick = async (step: number) => {
+    await saveProgress(resumeData);
+    setCurrentStep(step);
+  };
+
   const handleSaveAndExit = async () => {
     await saveProgress(resumeData);
     router.push("/");
@@ -101,7 +106,7 @@ export default function DynamicResumePage() {
           currentStep={1}
           totalSteps={8}
           completionPercentage={12}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onSaveAndExit={handleSaveAndExit}
           onSave={(data) => {
             setResumeData((prev) => ({ ...prev, personalInfo: data }));
@@ -120,7 +125,7 @@ export default function DynamicResumePage() {
           currentStep={2}
           totalSteps={8}
           completionPercentage={25}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(1)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -148,7 +153,7 @@ export default function DynamicResumePage() {
           currentStep={3}
           totalSteps={8}
           completionPercentage={38}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(2)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -175,7 +180,7 @@ export default function DynamicResumePage() {
           currentStep={4}
           totalSteps={8}
           completionPercentage={50}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(3)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -206,7 +211,7 @@ export default function DynamicResumePage() {
           currentStep={5}
           totalSteps={8}
           completionPercentage={63}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(4)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -236,7 +241,7 @@ export default function DynamicResumePage() {
           currentStep={6}
           totalSteps={8}
           completionPercentage={75}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(5)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -252,7 +257,7 @@ export default function DynamicResumePage() {
           currentStep={7}
           totalSteps={8}
           completionPercentage={88}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
           onBack={() => setCurrentStep(6)}
           onSaveAndExit={handleSaveAndExit}
           onNext={(data) => {
@@ -271,7 +276,7 @@ export default function DynamicResumePage() {
           onEditSection={(step) => setCurrentStep(step)}
           onBackToEditor={() => setCurrentStep(7)}
           onSaveAndExit={handleSaveAndExit}
-          onStepClick={(step) => setCurrentStep(step)}
+          onStepClick={handleStepClick}
         />
       )}
     </div>

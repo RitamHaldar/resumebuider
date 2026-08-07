@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Check,
   FileText,
@@ -77,6 +77,26 @@ export default function PersonalInfoForm({
     country: initialCountry,
   });
 
+  useEffect(() => {
+    if (initialData) {
+      const locParts = (initialData.location || "").split(", ");
+      const cCity = initialData.city || locParts[0] || "";
+      const cCountry = initialData.country || locParts[1] || "";
+      setFormData({
+        fullname: initialData.fullname || "",
+        email: initialData.email || "",
+        mobile: initialData.mobile || "",
+        location: initialData.location || "",
+        github: initialData.github || "",
+        linkedIn: initialData.linkedIn || "",
+        portfolio: initialData.portfolio || "",
+        professionalTitle: initialData.professionalTitle || "",
+        city: cCity,
+        country: cCountry,
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     let cityVal = formData.city || "";
@@ -107,7 +127,7 @@ export default function PersonalInfoForm({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-16">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 via-purple-50/20 to-slate-50 text-slate-800 flex flex-col justify-between font-sans relative pt-12">
       <ResumeTopBar
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -116,206 +136,182 @@ export default function PersonalInfoForm({
         onStepClick={onStepClick}
       />
 
-      <main className="max-w-4xl w-full mx-auto px-4 py-6 flex-1">
-        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-100/80 mb-8">
-          <div className="mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+      <main className="max-w-3xl w-full mx-auto px-4 py-4 flex-1">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-100/80 mb-4">
+          <div className="mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">
               Let's get to know you
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 text-xs mt-0.5">
               Start by providing your basic contact details. This is the first thing recruiters will see.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label htmlFor="fullname" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="fullname" className="block text-xs font-semibold text-slate-700 mb-1">
                 Full Name
               </label>
               <div className="relative flex items-center">
-                <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <User className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   id="fullname"
                   name="fullname"
                   value={formData.fullname}
                   onChange={handleChange}
-                  placeholder="e.g. Jane Doe"
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="professionalTitle" className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="professionalTitle" className="block text-xs font-semibold text-slate-700 mb-1">
                 Professional Title
               </label>
               <div className="relative flex items-center">
-                <Briefcase className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <Briefcase className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   id="professionalTitle"
                   name="professionalTitle"
                   value={formData.professionalTitle}
                   onChange={handleChange}
-                  placeholder="e.g. Senior Software Engineer"
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1">
                   Email Address
                 </label>
                 <div className="relative flex items-center">
-                  <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Mail className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                   <input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="jane.doe@example.com"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="mobile" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="mobile" className="block text-xs font-semibold text-slate-700 mb-1">
                   Phone Number
                 </label>
                 <div className="relative flex items-center">
-                  <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Phone className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                   <input
                     type="tel"
                     id="mobile"
                     name="mobile"
                     value={formData.mobile}
                     onChange={handleChange}
-                    placeholder="+1 (555) 000-0000"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="city" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="city" className="block text-xs font-semibold text-slate-700 mb-1">
                   City
                 </label>
                 <div className="relative flex items-center">
-                  <Building2 className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Building2 className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
                     id="city"
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    placeholder="San Francisco"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="country" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="country" className="block text-xs font-semibold text-slate-700 mb-1">
                   Country
                 </label>
                 <div className="relative flex items-center">
-                  <Globe className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Globe className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
                     id="country"
                     name="country"
                     value={formData.country}
                     onChange={handleChange}
-                    placeholder="United States"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0 mt-0.5">
-                <Lightbulb className="w-4 h-4" />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-sky-900 uppercase tracking-wide">
-                  AI Tip
-                </h5>
-                <p className="text-xs text-sky-800 font-medium mt-0.5 leading-relaxed">
-                  Ensure your contact info matches exactly what is on your LinkedIn profile for consistency.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+            <div className="pt-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                   ONLINE PRESENCE
                 </span>
                 <div className="flex-1 h-px bg-slate-100" />
               </div>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="linkedIn" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="linkedIn" className="block text-xs font-semibold text-slate-700 mb-1">
                     LinkedIn URL
                   </label>
                   <div className="relative flex items-center">
-                    <LinkedinIcon className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <LinkedinIcon className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       id="linkedIn"
                       name="linkedIn"
                       value={formData.linkedIn}
                       onChange={handleChange}
-                      placeholder="linkedin.com/in/janedoe"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="github" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    GitHub Profile URL
+                  <label htmlFor="github" className="block text-xs font-semibold text-slate-700 mb-1">
+                    GitHub Profile
                   </label>
                   <div className="relative flex items-center">
-                    <GithubIcon className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <GithubIcon className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       id="github"
                       name="github"
                       value={formData.github}
                       onChange={handleChange}
-                      placeholder="github.com/janedoe"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="portfolio" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="portfolio" className="block text-xs font-semibold text-slate-700 mb-1">
                     Portfolio / Website
                   </label>
                   <div className="relative flex items-center">
-                    <LinkIcon className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <LinkIcon className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       id="portfolio"
                       name="portfolio"
                       value={formData.portfolio}
                       onChange={handleChange}
-                      placeholder="janedoe.design"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
                     />
                   </div>
                 </div>
@@ -324,43 +320,26 @@ export default function PersonalInfoForm({
           </form>
         </div>
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-1">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 px-4 py-2.5 rounded-xl hover:bg-slate-100/80 transition"
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100/80 transition"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </button>
 
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex items-center gap-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 transition-all active:scale-[0.98]"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-sm shadow-indigo-200 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             Next Step
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </main>
-
-      <footer className="w-full border-t border-slate-100 bg-white/50 backdrop-blur-xs py-6 px-6 mt-12">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
-          <p>© 2026 ResumeElite AI. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-slate-600 transition">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-slate-600 transition">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-slate-600 transition">
-              Help Center
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -5,7 +5,6 @@ const ResumeSchema = new mongoose.Schema<IResume>({
     userid: {
         type: mongoose.Schema.Types.ObjectId,
         required: [true, "userId is needed"],
-        unique: [true, "userID should be unique"],
         ref: "User"
     },
     title: {

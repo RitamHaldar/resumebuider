@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ resu
     await connecttoDb();
     const userid = await GetUser();
     const { resumeId } = await params;
-    const resume = await ResumeModel.findOne({ userid, id: resumeId });
+    const resume = await ResumeModel.findOne({ userid, _id: resumeId });
     if(!resume){
       return NextResponse.json<Iresponse>({ success: false, message: "Resume not found"});
     }
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ re
     if(!body){
       return NextResponse.json<Iresponse>({ success: false, message: "No data passed"});
     }
-    const resume = await ResumeModel.updateOne({ userid, id: resumeId }, { $set: body });
+    const resume = await ResumeModel.updateOne({ userid, _id: resumeId }, { $set: body });
     return NextResponse.json<Iresponse>({ success: true, message: "Resume updated successfully", body: resume });
   } catch (error) {
     return NextResponse.json<Iresponse>({ success: false, message: "Failed to update resume", error: { error } });
@@ -37,7 +37,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     await connecttoDb();
     const userid = await GetUser();
     const { resumeId } = await params;
-    const resume = await ResumeModel.deleteOne({ userid, id: resumeId });
+    const resume = await ResumeModel.deleteOne({ userid, _id: resumeId });
     return NextResponse.json<Iresponse>({ success: true, message: "Resume deleted successfully", body: resume });
   } catch (error) {
     return NextResponse.json<Iresponse>({ success: false, message: "Failed to delete resume", error: { error } });
